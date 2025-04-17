@@ -1,0 +1,13 @@
+.site-header {
+  background: #1e3d59;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.site-header nav a {
+  color: white;
+  margin-left: 1rem;
+  text-decoration: none;
+}

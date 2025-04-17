@@ -1,30 +1,56 @@
 import React from 'react';
-import SearchForm from './components/SearchForm';  // ← added this
 import logo from './logo.svg';
 import './App.css';
 
+import Header from './components/Header';
+import SearchForm from './components/SearchForm';
+import SearchResults from './components/SearchResults';
+import Footer from './components/Footer';
+
 function App() {
+  // state to hold search results
+  const [results, setResults] = React.useState([]);
+
+  // called when the form submits
+  const handleSearch = (criteria) => {
+    console.log('Searching for', criteria);
+    // TODO: replace with real API call
+    // Here’s some dummy data to test your UI:
+    setResults([
+      {
+        id: 1,
+        name: 'Brake Pad',
+        image: '/images/brake-pad.jpg',
+        price: 49.99,
+        compatibility: ['Toyota Camry 2020'],
+      },
+      {
+        id: 2,
+        name: 'Air Filter',
+        image: '/images/air-filter.jpg',
+        price: 19.99,
+        compatibility: ['Honda Civic 2019'],
+      },
+    ]);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a  
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <>
+      <Header />
+      <main className="App">
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <p>Edit <code>src/App.js</code> and save to reload.</p>
+        </header>
 
-      {/* Insert your SearchForm below */}
-      <SearchForm onSearch={criteria => console.log('Searching for', criteria)} />
+        {/* search form */}
+        <SearchForm onSearch={handleSearch} />
 
-    </div>
+        {/* results grid */}
+        <SearchResults results={results} />
+      </main>
+      <Footer />
+    </>
   );
 }
 
