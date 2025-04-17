@@ -1,3 +1,5 @@
+import React from 'react';
+import SearchForm from './components/SearchForm';  // ← added this
 import logo from './logo.svg';
 import './App.css';
 
@@ -9,7 +11,7 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <a
+        <a  
           className="App-link"
           href="https://reactjs.org"
           target="_blank"
@@ -18,8 +20,13 @@ function App() {
           Learn React
         </a>
       </header>
+
+      {/* Insert your SearchForm below */}
+      <SearchForm onSearch={criteria => console.log('Searching for', criteria)} />
+
     </div>
   );
 }
 
 export default App;
+
