@@ -6,6 +6,7 @@
     "npm": "8.x"
   },
   "scripts": {
+    "build": "cd frontend && npm install && npm run build",
     "start": "node backend/server.js",
     "heroku-postbuild": "cd frontend && npm install && npm run build"
   },

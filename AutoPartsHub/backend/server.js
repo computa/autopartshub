@@ -1,22 +1,18 @@
 // backend/server.js
-const express = require('express');
 const path = require('path');
+const express = require('express');
 const app = express();
+const PORT = process.env.PORT || 4000;
 
-// Serve React static files
+// 1. Serve all the static files from the React build folder
 app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-// Health‑check endpoint
-app.get('/health', (req, res) => {
-  res.send('✅ Backend is healthy');
-});
-
-// All other GET requests return the React app
+// 2. For any other route, send back React's index.html so client-side routing works
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
 });
+
