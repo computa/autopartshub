@@ -16,36 +16,38 @@ export default function SearchForm({ onSearch }) {
 
   return (
     <form className="search-form" onSubmit={submit}>
-      <input
-        type="text"
-        placeholder="Keyword…"
-        value={q}
-        onChange={e => setQ(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Part #…"
-        value={partNumber}
-        onChange={e => setPartNumber(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Make"
-        value={make}
-        onChange={e => setMake(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Model"
-        value={model}
-        onChange={e => setModel(e.target.value)}
-      />
-      <input
-        type="number"
-        placeholder="Year"
-        value={year}
-        onChange={e => setYear(e.target.value)}
-      />
+      <div className="search-fields">
+        <input
+          type="text"
+          placeholder="Keyword…"
+          value={q}
+          onChange={e => setQ(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Part #…"
+          value={partNumber}
+          onChange={e => setPartNumber(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Make"
+          value={make}
+          onChange={e => setMake(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Model"
+          value={model}
+          onChange={e => setModel(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Year"
+          value={year}
+          onChange={e => setYear(e.target.value)}
+        />
+      </div>
       <button type="submit">Search</button>
     </form>
   );
