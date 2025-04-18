@@ -1,22 +1,22 @@
 [
   {
     "id": "123",
-    "partNumber": "BP‑TOY‑COR‑2019",
     "name": "Brake Pad Set",
     "make": "Toyota",
     "model": "Corolla",
     "year": 2019,
     "price": 49.99,
+    "partNumber": "BP-TOY-COR-2019",
     "image": "/images/brake-pad.jpg"
   },
   {
     "id": "456",
-    "partNumber": "OF‑HON‑CIV‑2020",
     "name": "Oil Filter",
     "make": "Honda",
     "model": "Civic",
     "year": 2020,
     "price": 9.99,
+    "partNumber": "OF-HON-CIV-2020",
     "image": "/images/oil-filter.jpg"
   }
 ]
