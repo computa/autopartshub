@@ -1,7 +1,9 @@
+/* frontend/src/components/Footer.css */
 .site-footer {
-  background: #f5f5f5;
-  color: #333;
   text-align: center;
   padding: 1rem;
+  background: #f5f5f5;
+  color: #333;
   margin-top: 2rem;
 }
+

@@ -1,103 +1,51 @@
-import React, { useState, useEffect } from 'react';
+// frontend/src/components/SearchForm.jsx
+import React, { useState } from 'react';
 import './SearchForm.css';
 
 export default function SearchForm({ onSearch }) {
-  const [mode, setMode] = useState('text');    // 'text' or 'part'
   const [q, setQ] = useState('');
-  const [partNumber, setPartNumber] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
   const [year, setYear] = useState('');
+  const [partNumber, setPartNumber] = useState('');
 
-  const handleSubmit = e => {
+  const submit = e => {
     e.preventDefault();
-
-    if (mode === 'part') {
-      onSearch({ partNumber });
-    } else {
-      onSearch({ q, make, model, year });
-    }
+    onSearch({ q, make, model, year, partNumber });
   };
 
   return (
-    <form className="search-form" onSubmit={handleSubmit}>
-      <div className="search-mode-toggle">
-        <label>
-          <input
-            type="radio"
-            name="mode"
-            value="text"
-            checked={mode === 'text'}
-            onChange={() => setMode('text')}
-          />
-          Search by name/filters
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="mode"
-            value="part"
-            checked={mode === 'part'}
-            onChange={() => setMode('part')}
-          />
-          Search by Part #
-        </label>
-      </div>
-
-      {mode === 'part'
-        ? (
-          <div className="field-group">
-            <label>Part Number</label>
-            <input
-              type="text"
-              value={partNumber}
-              onChange={e => setPartNumber(e.target.value)}
-              placeholder="e.g. 123-XYZ"
-            />
-          </div>
-        )
-        : (
-          <>
-            <div className="field-group">
-              <label>Free text</label>
-              <input
-                type="text"
-                value={q}
-                onChange={e => setQ(e.target.value)}
-                placeholder="e.g. Brake"
-              />
-            </div>
-            <div className="field-group">
-              <label>Make</label>
-              <input
-                type="text"
-                value={make}
-                onChange={e => setMake(e.target.value)}
-                placeholder="Toyota"
-              />
-            </div>
-            <div className="field-group">
-              <label>Model</label>
-              <input
-                type="text"
-                value={model}
-                onChange={e => setModel(e.target.value)}
-                placeholder="Corolla"
-              />
-            </div>
-            <div className="field-group">
-              <label>Year</label>
-              <input
-                type="number"
-                value={year}
-                onChange={e => setYear(e.target.value)}
-                placeholder="2019"
-              />
-            </div>
-          </>
-        )
-      }
-
+    <form className="search-form" onSubmit={submit}>
+      <input
+        type="text"
+        placeholder="Keyword…"
+        value={q}
+        onChange={e => setQ(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Part #…"
+        value={partNumber}
+        onChange={e => setPartNumber(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Make"
+        value={make}
+        onChange={e => setMake(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Model"
+        value={model}
+        onChange={e => setModel(e.target.value)}
+      />
+      <input
+        type="number"
+        placeholder="Year"
+        value={year}
+        onChange={e => setYear(e.target.value)}
+      />
       <button type="submit">Search</button>
     </form>
   );

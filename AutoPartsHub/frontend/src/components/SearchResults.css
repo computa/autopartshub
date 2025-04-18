@@ -1,7 +1,7 @@
+/* frontend/src/components/SearchResults.css */
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
-  padding: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
