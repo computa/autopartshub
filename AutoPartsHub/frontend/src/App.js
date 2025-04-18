@@ -3,6 +3,7 @@ import './App.css';
 // import Header from './components/Header';  // optional
 import SearchForm from './components/SearchForm';
 import SearchResults from './components/SearchResults';
+import Footer from './components/Footer';  // if you made one
 
 function App() {
   const [results, setResults] = useState([]);
@@ -24,7 +25,7 @@ function App() {
 
       <SearchResults results={results} />
 
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 }
