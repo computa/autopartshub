@@ -1,29 +1,30 @@
 const express = require('express');
-const parts   = require('../data/parts.json');
-const router  = express.Router();
+const parts = require('../data/parts.json');
+const router = express.Router();
 
-// GET /api/search?q=&make=&model=&year=
+// GET /api/search?partNumber=&q=&make=&model=&year=
 router.get('/search', (req, res) => {
-  const {
-    q     = '',
-    make  = '',
-    model = '',
-    year
-  } = req.query;
+  const { partNumber, q = '', make, model, year } = req.query;
 
-  const results = parts.filter(p => {
-    return (
-      // name match
-      p.name.toLowerCase().includes(q.toLowerCase()) &&
+  let results = parts;
 
-      // make/model (if provided)
-      (!make  || p.make.toLowerCase()  === make.toLowerCase()) &&
-      (!model || p.model.toLowerCase() === model.toLowerCase()) &&
-
-      // year (if provided)
-      (!year  || p.year === parseInt(year, 10))
+  // 1) If user provided a partNumber, only match that exactly:
+  if (partNumber) {
+    results = results.filter(p =>
+      String(p.partNumber || p.id).toLowerCase() === partNumber.toLowerCase()
     );
-  });
+    return res.json(results);
+  }
+
+  // 2) Otherwise do the free‑text + filters flow:
+  if (q) {
+    results = results.filter(p =>
+      p.name.toLowerCase().includes(q.toLowerCase())
+    );
+  }
+  if (make)  results = results.filter(p => p.make === make);
+  if (model) results = results.filter(p => p.model === model);
+  if (year)  results = results.filter(p => String(p.year) === year);
 
   res.json(results);
 });

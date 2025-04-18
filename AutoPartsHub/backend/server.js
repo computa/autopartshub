@@ -1,18 +1,18 @@
-// backend/server.js
-const path = require('path');
 const express = require('express');
+const path = require('path');
+const searchRouter = require('./routes/search');
+
 const app = express();
-const PORT = process.env.PORT || 4000;
 
-// 1. Serve all the static files from the React build folder
+// mount the JSON-backed search API under /api
+app.use('/api', searchRouter);
+
+// serve React build
 app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-// 2. For any other route, send back React's index.html so client-side routing works
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
-});
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
 
