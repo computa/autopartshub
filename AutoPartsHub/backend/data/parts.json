@@ -1,6 +1,7 @@
 [
   {
     "id": "123",
+    "partNumber": "BP‑TOY‑COR‑2019",
     "name": "Brake Pad Set",
     "make": "Toyota",
     "model": "Corolla",
@@ -10,6 +11,7 @@
   },
   {
     "id": "456",
+    "partNumber": "OF‑HON‑CIV‑2020",
     "name": "Oil Filter",
     "make": "Honda",
     "model": "Civic",
