@@ -1,17 +1,25 @@
 // backend/middleware/auth.js
+
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
-// Middleware to require a valid JWT and populate req.user
+/**
+ * requireAuth
+ *  - Verifies the JWT from the Authorization header
+ *  - On success, attaches the payload to req.user and calls next()
+ *  - On failure, responds 401 Unauthorized
+ */
 function requireAuth(req, res, next) {
-  const auth = req.headers.authorization || '';
-  const token = auth.replace(/^[Bb]earer\s*/, '');
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^[Bb]earer\s*/, '');
+
   if (!token) {
     return res.status(401).json({ error: 'Missing bearer token' });
   }
+
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    // payload.userId, payload.isAdmin, etc.
+    // payload should contain e.g. { userId: 1, isAdmin: true, iat: ..., exp: ... }
     req.user = payload;
     next();
   } catch (err) {
@@ -19,9 +27,13 @@ function requireAuth(req, res, next) {
   }
 }
 
-// Middleware to require admin flag
+/**
+ * requireAdmin
+ *  - First runs requireAuth to ensure the user is logged in
+ *  - Then checks req.user.isAdmin flag
+ *  - If not an admin, responds 403 Forbidden
+ */
 function requireAdmin(req, res, next) {
-  // first ensure they’re authenticated
   requireAuth(req, res, () => {
     if (!req.user.isAdmin) {
       return res.status(403).json({ error: 'Admin only' });
