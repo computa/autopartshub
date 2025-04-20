@@ -1,13 +1,34 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
+
+const authRouter = require('./routes/auth');
+const meRouter = require('./routes/me');
 const searchRouter = require('./routes/search');
+const dbtestRouter = require('./routes/dbtest');
+const partsRouter = require('./routes/parts');
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-// mount the JSON-backed search API under /api
+// Authentication endpoints
+app.use('/api/auth', authRouter);
+
+// “Who am I?” protected endpoint
+app.use('/api', meRouter);
+
+// Search endpoint
 app.use('/api', searchRouter);
 
-// serve React build
+// DB‐connection test
+app.use('/api', dbtestRouter);
+
+// Parts CRUD (admin only for POST/DELETE)
+app.use('/api/parts', partsRouter);
+
+// Serve React build for all other routes
 app.use(express.static(path.join(__dirname, '../frontend/build')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
