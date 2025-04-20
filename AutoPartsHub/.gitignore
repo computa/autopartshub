@@ -1,2 +1,9 @@
+# backend/.gitignore
+
 node_modules/
 build/
+
+# allow our DB seed scripts (path is relative to backend/)
+!/db/seeds/
+!/db/seeds/*.sql
+
