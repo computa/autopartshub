@@ -7,3 +7,5 @@ build/
 !/db/seeds/
 !/db/seeds/*.sql
 
+.env
+backend/.env
