@@ -8,6 +8,7 @@ const meRouter = require('./routes/me');
 const searchRouter = require('./routes/search');
 const dbtestRouter = require('./routes/dbtest');
 const partsRouter = require('./routes/parts');
+const cartsRouter = require('./routes/carts');
 
 const app = express();
 app.use(cors());
@@ -27,6 +28,7 @@ app.use('/api', dbtestRouter);
 
 // Parts CRUD (admin only for POST/DELETE)
 app.use('/api/parts', partsRouter);
+app.use('/api/carts', cartsRouter);
 
 // Serve React build for all other routes
 app.use(express.static(path.join(__dirname, '../frontend/build')));
