@@ -9,7 +9,7 @@ const searchRouter = require('./routes/search');
 const dbtestRouter = require('./routes/dbtest');
 const partsRouter = require('./routes/parts');
 const cartsRouter = require('./routes/carts');
-onst ordersRouter = require('./routes/orders');
+const ordersRouter = require('./routes/orders');
 
 const app = express();
 app.use(cors());
