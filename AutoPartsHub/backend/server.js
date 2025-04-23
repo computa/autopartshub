@@ -8,8 +8,7 @@ const meRouter = require('./routes/me');
 const searchRouter = require('./routes/search');
 const dbtestRouter = require('./routes/dbtest');
 const partsRouter     = require('./routes/parts');
-const cartsRouter     = require('./routes/carts');
-const cartsRouter = require('./routes/carts');
+const cartsRouter  = require('./routes/carts');
 const ordersRouter = require('./routes/orders');
 
 const app = express();
