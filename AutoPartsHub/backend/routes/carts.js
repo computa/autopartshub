@@ -1,15 +1,14 @@
 const express = require('express');
 const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
-
 const router = express.Router();
 
 // GET /api/carts
-// → [ { id, user_id, created_at }, … ]
+// → all carts for the current user
 router.get('/', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM carts WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT * FROM carts WHERE user_id = $1',
       [req.user.userId]
     );
     res.json(rows);
@@ -20,7 +19,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // POST /api/carts
-// → { id, user_id, created_at }
+// → create a new cart for current user
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -40,7 +39,6 @@ router.post('/:cartId/items', requireAuth, async (req, res) => {
   const { cartId } = req.params;
   const { partId, quantity } = req.body;
   try {
-    // optionally enforce cart ownership here
     const { rows } = await pool.query(
       `INSERT INTO cart_items (cart_id, part_id, quantity)
        VALUES ($1, $2, $3)
