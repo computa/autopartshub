@@ -1,10 +1,9 @@
 require('dotenv').config();
 const express = require('express');
-const path = require('path');
-const cors = require('cors');
-// if you want Helmet, uncomment these two lines and run `npm install helmet`:
-// const helmet = require('helmet');
-// app.use(helmet());
+const path    = require('path');
+const cors    = require('cors');
+const helmet  = require('helmet');
+const morgan  = require('morgan');
 
 const authRouter   = require('./routes/auth');
 const meRouter     = require('./routes/me');
@@ -15,40 +14,35 @@ const cartsRouter  = require('./routes/carts');
 const ordersRouter = require('./routes/orders');
 
 const app = express();
+
+// ─── global middleware ────────────────────────────────────────────────────────
+app.use(helmet());
+app.use(morgan('tiny'));
 app.use(cors());
 app.use(express.json());
 
-// Authentication endpoints
-app.use('/api/auth', authRouter);
-
-// “Who am I?” protected endpoint
-app.use('/api', meRouter);
-
-// Search endpoint
-app.use('/api', searchRouter);
-
-// DB‐connection test
-app.use('/api', dbtestRouter);
-
-// Parts CRUD (admin only for POST/DELETE)
+// ─── API routes ───────────────────────────────────────────────────────────────
+app.use('/api/auth',  authRouter);
+app.use('/api',       meRouter);        // /api/me
+app.use('/api',       searchRouter);    // /api/search
+app.use('/api',       dbtestRouter);    // /api/dbtest
 app.use('/api/parts', partsRouter);
-
-// Cart & Order endpoints
 app.use('/api/carts', cartsRouter);
 app.use('/api/orders', ordersRouter);
 
-// Serve React build for all other routes
+// ─── React build (must come *after* all API routes) ───────────────────────────
 app.use(express.static(path.join(__dirname, '../frontend/build')));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-});
+app.get('*', (req, res) =>
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'))
+);
 
-// Catch-all error handler
-app.use((err, req, res, next) => {
+// ─── error fallback ───────────────────────────────────────────────────────────
+app.use((err, req, res, _next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+// ─── start server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀  Server listening on port ${PORT}`));
 
