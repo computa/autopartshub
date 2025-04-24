@@ -1,90 +1,86 @@
+// backend/routes/orders.js
 const express = require('express');
 const pool = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
 /**
- * POST /api/orders    body: { cartId }
- *
- * - creates an order from the specified cart
- * - copies cart_items → order_items
- * - calculates total
- * - empties the cart
+ * GET /api/orders
+ * - admin  ⇒ every order
+ * - user   ⇒ just their orders
  */
-router.post('/', requireAuth, async (req, res) => {
-  const { cartId } = req.body;
-  if (!cartId) {
-    return res.status(400).json({ error: 'cartId required' });
-  }
-
-  const client = await pool.connect();
-
+router.get('/', requireAuth, async (req, res) => {
   try {
-    await client.query('BEGIN');
+    const query = req.user.isAdmin
+      ? 'SELECT * FROM orders ORDER BY created_at DESC'
+      : 'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC';
 
-    /* 1️⃣  grab the cart lines + prices */
-    const { rows: cartLines } = await client.query(
-      `SELECT ci.part_id,
-              ci.quantity,
-              p.price::numeric            -- ensure numeric for math
-       FROM   cart_items ci
-       JOIN   parts p ON p.id = ci.part_id
-       WHERE  ci.cart_id = $1`,
-      [cartId]
-    );
+    const params = req.user.isAdmin ? [] : [req.user.userId];
+    const { rows } = await pool.query(query, params);
+    res.json(rows);
+  } catch (err) {
+    console.error('List orders error:', err);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
 
-    if (cartLines.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Cart is empty' });
+/**
+ * GET /api/orders/:id/items
+ * - user may only read their own order (or admin)
+ */
+router.get('/:id/items', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // authorise
+    if (!req.user.isAdmin) {
+      const { rows: ownerRows } = await pool.query(
+        'SELECT user_id FROM orders WHERE id = $1',
+        [id]
+      );
+      if (ownerRows.length === 0) return res.status(404).json({ error: 'Order not found' });
+      if (ownerRows[0].user_id !== req.user.userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
     }
 
-    /* 2️⃣  compute total */
-    const total = cartLines.reduce(
-      (sum, l) => sum + Number(l.price) * l.quantity,
-      0
+    const { rows } = await pool.query(
+      `SELECT oi.*, p.name, p.price
+         FROM order_items oi
+         JOIN parts p ON p.id = oi.part_id
+        WHERE oi.order_id = $1`,
+      [id]
     );
-
-    /* 3️⃣  create the order, capture its id */
-    const { rows: [order] } = await client.query(
-      `INSERT INTO orders (user_id, total)
-       VALUES ($1, $2)
-       RETURNING *`,
-      [req.user.userId, total.toFixed(2)]
-    );
-    const orderId = order.id;
-
-    /* 4️⃣  bulk-insert the order_items */
-    // Build `( $1, $2, $3, $4 ), ( $1, $5, $6, $7 ), …`
-    const valueBlocks = cartLines
-      .map((_, i) => `($1, $${i * 3 + 2}, $${i * 3 + 3}, $${i * 3 + 4})`)
-      .join(', ');
-
-    const params = [orderId];
-    cartLines.forEach(l => {
-      params.push(l.part_id, l.quantity, l.price);
-    });
-
-    await client.query(
-      `INSERT INTO order_items
-       (order_id, part_id, quantity, price_at_purchase)
-       VALUES ${valueBlocks}`,
-      params
-    );
-
-    /* 5️⃣  empty the cart */
-    await client.query('DELETE FROM cart_items WHERE cart_id = $1', [cartId]);
-
-    await client.query('COMMIT');
-    res.status(201).json(order);          // return the new order 👍
+    res.json(rows);
   } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('create-order error:', err);
-    res.status(400).json({
-      error: err.detail || 'Failed to create order'
-    });
-  } finally {
-    client.release();
+    console.error('Fetch order items error:', err);
+    res.status(500).json({ error: 'Failed to fetch order items' });
+  }
+});
+
+/**
+ * PATCH /api/orders/:id   { status }
+ * - admin only
+ */
+router.patch('/:id', requireAuth, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const ALLOWED = ['pending', 'paid', 'shipped', 'cancelled'];
+
+  if (!ALLOWED.includes(status)) {
+    return res.status(400).json({ error: `status must be one of ${ALLOWED.join(', ')}` });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Update order error:', err);
+    res.status(500).json({ error: 'Failed to update order' });
   }
 });
 
