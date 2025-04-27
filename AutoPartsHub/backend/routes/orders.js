@@ -1,87 +1,84 @@
-// backend/routes/orders.js
+/* backend/routes/orders.js */
 const express = require('express');
-const pool = require('../db');
+const pool    = require('../db');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-/**
- * GET /api/orders
- * - admin  ⇒ every order
- * - user   ⇒ just their orders
- */
+/* ————— create order from cart ————— */
+router.post('/', requireAuth, async (req, res) => {
+  const { cartId } = req.body;
+
+  // 1. copy items & calc total
+  const { rows: totalRows } = await pool.query(
+    `SELECT SUM(ci.quantity * p.price)::float AS total   -- cast here
+       FROM cart_items ci
+       JOIN parts p ON p.id = ci.part_id
+      WHERE ci.cart_id = $1`,
+    [cartId]
+  );
+  const total = totalRows[0].total;
+  if (!total) return res.status(400).json({ error: 'Cart is empty' });
+
+  // 2. create order
+  const { rows: orderRows } = await pool.query(
+    `INSERT INTO orders (user_id, total)
+     VALUES ($1,$2) RETURNING *`,
+    [req.user.userId, total]
+  );
+  const order = orderRows[0];
+
+  // 3. move items
+  await pool.query(
+    `INSERT INTO order_items (order_id, part_id, quantity, price_at_purchase)
+       SELECT $1, ci.part_id, ci.quantity, p.price
+         FROM cart_items ci
+         JOIN parts p ON p.id = ci.part_id
+        WHERE ci.cart_id = $2`,
+    [order.id, cartId]
+  );
+
+  // 4. clear cart
+  await pool.query('DELETE FROM carts WHERE id = $1', [cartId]);
+
+  res.status(201).json(order);
+});
+
+/* ————— list orders (admin sees all, user sees own) ————— */
 router.get('/', requireAuth, async (req, res) => {
-  try {
-    const query = req.user.isAdmin
-      ? 'SELECT * FROM orders ORDER BY created_at DESC'
-      : 'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC';
-
-    const params = req.user.isAdmin ? [] : [req.user.userId];
-    const { rows } = await pool.query(query, params);
-    res.json(rows);
-  } catch (err) {
-    console.error('List orders error:', err);
-    res.status(500).json({ error: 'Failed to fetch orders' });
-  }
+  const q =
+    req.user.isAdmin
+      ? 'SELECT * FROM orders ORDER BY id DESC'
+      : 'SELECT * FROM orders WHERE user_id = $1 ORDER BY id DESC';
+  const { rows } = await pool.query(q, req.user.isAdmin ? [] : [req.user.userId]);
+  // ensure numeric total
+  rows.forEach(r => (r.total = Number(r.total)));
+  res.json(rows);
 });
 
-/**
- * GET /api/orders/:id/items
- * - user may only read their own order (or admin)
- */
-router.get('/:id/items', requireAuth, async (req, res) => {
-  const { id } = req.params;
-  try {
-    // authorise
-    if (!req.user.isAdmin) {
-      const { rows: ownerRows } = await pool.query(
-        'SELECT user_id FROM orders WHERE id = $1',
-        [id]
-      );
-      if (ownerRows.length === 0) return res.status(404).json({ error: 'Order not found' });
-      if (ownerRows[0].user_id !== req.user.userId) {
-        return res.status(403).json({ error: 'Forbidden' });
-      }
-    }
-
-    const { rows } = await pool.query(
-      `SELECT oi.*, p.name, p.price
-         FROM order_items oi
-         JOIN parts p ON p.id = oi.part_id
-        WHERE oi.order_id = $1`,
-      [id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error('Fetch order items error:', err);
-    res.status(500).json({ error: 'Failed to fetch order items' });
-  }
+/* ————— list items in one order ————— */
+router.get('/:orderId/items', requireAuth, async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT oi.*,
+            p.name,
+            p.price::float AS price          -- ← cast here
+       FROM order_items oi
+       JOIN parts p ON p.id = oi.part_id
+      WHERE oi.order_id = $1`,
+    [req.params.orderId]
+  );
+  res.json(rows);
 });
 
-/**
- * PATCH /api/orders/:id   { status }
- * - admin only
- */
-router.patch('/:id', requireAuth, requireAdmin, async (req, res) => {
-  const { id } = req.params;
+/* ————— admin patch status ————— */
+router.patch('/:orderId', requireAuth, requireAdmin, async (req, res) => {
   const { status } = req.body;
-  const ALLOWED = ['pending', 'paid', 'shipped', 'cancelled'];
-
-  if (!ALLOWED.includes(status)) {
-    return res.status(400).json({ error: `status must be one of ${ALLOWED.join(', ')}` });
-  }
-
-  try {
-    const { rows } = await pool.query(
-      'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
-    );
-    if (rows.length === 0) return res.status(404).json({ error: 'Order not found' });
-    res.json(rows[0]);
-  } catch (err) {
-    console.error('Update order error:', err);
-    res.status(500).json({ error: 'Failed to update order' });
-  }
+  const { rows } = await pool.query(
+    `UPDATE orders SET status = $1 WHERE id = $2 RETURNING *`,
+    [status, req.params.orderId]
+  );
+  rows[0].total = Number(rows[0].total);
+  res.json(rows[0]);
 });
 
 module.exports = router;
