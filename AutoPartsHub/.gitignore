@@ -9,3 +9,7 @@ build/
 
 .env
 backend/.env
+.DS_Store
+admin.token
+*.save
+*.bak
