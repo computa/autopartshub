@@ -1,19 +1,26 @@
-// frontend/src/components/Navbar.jsx
-import React from 'react';
+// excerpt frontend/src/components/Navbar.jsx
 import { Link } from 'react-router-dom';
-import './Navbar.css';                 // optional styling
+import { AuthContext } from '../context/AuthContext';
 
 export default function Navbar() {
+  const { user, signOut } = React.useContext(AuthContext);
+
   return (
     <nav className="nav">
-      <h2 className="brand">AutoPartsHub</h2>
-      <ul className="nav-links">
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/search">Search</Link></li>
-        <li><Link to="/parts">Parts</Link></li>
-        <li><Link to="/about">About</Link></li>
-        <li><Link to="/login">Login</Link></li>
-      </ul>
+      <Link to="/">Home</Link>
+      <Link to="/search">Search</Link>
+      <Link to="/about">About</Link>
+
+      <span className="spacer" />
+
+      {user ? (
+        <>
+          <span>Hello&nbsp;{user.username}</span>
+          <button onClick={signOut}>Logout</button>
+        </>
+      ) : (
+        <Link to="/login">Login</Link>
+      )}
     </nav>
   );
 }
